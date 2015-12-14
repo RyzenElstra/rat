@@ -17,7 +17,8 @@ public class Client {
     private Socket s;
     private Thread t;
     public String id;
-
+    public String infos;
+    
     public Client(Socket s, Thread t) {
         this.s = s;
         t.start();

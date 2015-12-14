@@ -14,6 +14,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultListModel;
+import javax.swing.table.DefaultTableModel;
+import org.apache.commons.codec.binary.Hex;
 
 /**
  *
@@ -42,7 +44,8 @@ public class Server {
                         while (true) {
                             String line = r.readLine();
                             if (line.startsWith("info")) {
-                                String uuid = line.split("\\|")[1];
+                                String[] ar = line.split("\\|");
+                                String uuid = ar[1];
                                 System.out.println("Client hat sich verbunden " + uuid);
                                 for (Client c : clients) {
                                     if (c.id.equals(uuid)) {
@@ -50,7 +53,24 @@ public class Server {
                                         break;
                                     }
                                 }
+                                cl.infos = s.getInetAddress().getHostAddress() + " " + ar[2] + "@" + ar[4] + " " + ar[3];
                                 addClient(cl);
+                            }
+                            if (line.startsWith("systeminfos")) {
+                                String[] ar = line.split("\\|");
+                                String data = fromHex(ar[1]);
+                                String[] ar1 = data.split("\n");
+                                DefaultTableModel d = (DefaultTableModel) Gui.jTable1.getModel();
+                                while (d.getRowCount() > 0) {
+                                    d.removeRow(0);
+                                }
+                                for (String str : ar1) {
+                                    try {
+                                        String[] ar2 = str.split("\\|");
+                                        d.addRow(new Object[]{ar2[0], ar2[1]});
+                                    } catch (Exception e) {
+                                    }
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -62,14 +82,22 @@ public class Server {
         }
     }
 
-    static void addClient(Client c){
+    static String fromHex(String input) {
+        try {
+            return new String(Hex.decodeHex(input.toCharArray()));
+        } catch (Exception e) {
+            return new String();
+        }
+    }
+
+    static void addClient(Client c) {
         DefaultListModel dlm = (DefaultListModel) gui.jList1.getModel();
-        dlm.addElement("Client: " + c.id);
+        dlm.addElement("Client: " + c.infos + " " + c.id);
     }
 
     static Client getClient(String uuid) {
-        for(Client c : clients){
-            if(c.id.equals(uuid)){
+        for (Client c : clients) {
+            if (c.id.equals(uuid)) {
                 return c;
             }
         }
